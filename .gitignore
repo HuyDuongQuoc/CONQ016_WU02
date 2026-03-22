@@ -1,0 +1,10 @@
+# Python Virtual Environment
+venv/
+env/
+
+# Cache
+__pycache__/
+*.pyc
+
+# Local Data
+*.csv
