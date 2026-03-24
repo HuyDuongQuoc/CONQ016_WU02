@@ -5,3 +5,4 @@ deap
 streamlit
 scipy
 networkx
+faker
