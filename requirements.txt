@@ -3,3 +3,5 @@ numpy
 scikit-fuzzy
 deap
 streamlit
+scipy
+networkx
