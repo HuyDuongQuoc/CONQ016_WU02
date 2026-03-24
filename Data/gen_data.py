@@ -63,7 +63,7 @@ tasks = generate_task_data(500)
 df = pd.DataFrame(tasks)
 
 # Lưu file CSV (Lưu ý: prerequisites sẽ được lưu dưới dạng chuỗi đại diện cho list)
-df.to_csv("tasks_data.csv", index=False, encoding="utf-8-sig")
+df.to_csv("Data/tasks_data.csv", index=False, encoding="utf-8-sig")
 
 print("Đã sinh xong 500 task vào file tasks_data.csv!")
 print(df.head()) # Hiển thị 5 dòng đầu để kiểm tra
