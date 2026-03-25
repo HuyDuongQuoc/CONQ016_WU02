@@ -126,10 +126,13 @@ def evaluate_and_sort_tasks(task_list, fuzzy_sim):
         # Chạy suy luận và giải mờ (Defuzzification)
         try:
             fuzzy_sim.compute()
-            task['urgency_score'] = round(fuzzy_sim.output['urgency'], 2)
-        except ValueError:
-            # Bắt lỗi nếu số liệu lọt ra ngoài vùng định nghĩa của đồ thị
-            task['urgency_score'] = 5.0 
+            urgency_value = fuzzy_sim.output.get('urgency', None)
+            if urgency_value is None:
+                task['urgency_score'] = 5.0
+            else:
+                task['urgency_score'] = round(float(urgency_value), 2)
+        except (ValueError, KeyError):
+            task['urgency_score'] = 5.0
 
     # SẮP XẾP TIE-BREAKER: 
     # Ưu tiên 1: Khẩn cấp xếp trước

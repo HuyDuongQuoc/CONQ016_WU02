@@ -28,6 +28,7 @@ prerequisites={
     'CO4337': ['CO335','CO4029'],
 
 }
+
 # 1. Tạo bộ tra cứu ID -> Tên môn
 id_to_name = dict(zip(df['ID'], df['Subject']))
 
