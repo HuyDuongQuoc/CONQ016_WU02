@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import calendar
 from datetime import datetime
+import plotly.express as px
 
 # 1. CẤU HÌNH TRANG VÀ CSS TÙY CHỈNH
 st.set_page_config(page_title="Smart Timetable & Task Optimizer", layout="wide")
@@ -30,14 +31,16 @@ st.markdown("""
         margin-bottom: 10px;
     }
     .task-box-title {
+        align-items: center;
+        # min-height: 35px;
         font-size: 17px;
         font-weight: 500;
         line-height: 1;
     }
     /* Checkbox checked state for mini tasks */
     [data-testid="stCheckbox"] [role="checkbox"][aria-checked="true"] {
-        background-color: #38a169 !important;
-        border-color: #38a169 !important;
+        background-color: #5adb6b ;
+        border-color: #5adb6b ;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -130,25 +133,36 @@ with col_right:
     
     days_in_month = calendar.monthrange(current_year, selected_month)[1]
     days = np.arange(1, days_in_month + 1)
+    
+    # HARDCODE DATA: SỐ TASK HOÀN THÀNH MỖI NGÀY (DÙNG SEED THEO THÁNG ĐỂ DỮ LIỆU ỔN ĐỊNH KHI RERUN)
     # Dùng seed theo tháng để dữ liệu ổn định khi rerun
     rng = np.random.default_rng(seed=selected_month)
-    completed_tasks = np.cumsum(rng.integers(0, 5, size=days_in_month))
+    completed_tasks = rng.integers(0, 5, size=days_in_month)
     
     chart_data = pd.DataFrame({
+        'Day': days,
         'Completed Tasks': completed_tasks
-    }, index=days)
+    })
     
-    # Dùng area_chart để tạo biểu đồ dạng đường có tô màu bên dưới giống ảnh
-    st.area_chart(chart_data, color="#4299e1")
+    # Dùng plotly bar_chart để tạo biểu đồ cột với nhãn x xoay dọc
+    fig = px.bar(chart_data, x='Day', y='Completed Tasks', 
+                 color_discrete_sequence=["#99d4fb"],
+                 labels={'Completed Tasks': 'Completed Tasks', 'Day': 'Day'})
+    fig.update_layout(
+        showlegend=False,
+        height=400,
+        margin=dict(b=100)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 # ================= (LEFT COLUMN) =================
 with col_left:
-    header_text_col, header_add_col = st.columns([8, 1.2])
+    header_text_col, header_add_col = st.columns([8, 1.5])
     with header_text_col:
         st.markdown('<div class="section-header">PRIORITIZED TASK LIST & DETAILS</div>', unsafe_allow_html=True)
 
     with header_add_col:
-        if st.button("➕", key="open_add_task_btn", help="Add task"):
+        if st.button("Add", key="open_add_task_btn", help="Add task"):
             st.session_state.show_add_task_input = True
             st.rerun()
 
@@ -219,7 +233,7 @@ with col_left:
             st.session_state[expanded_key] = task["expanded"]
 
         with st.container(border=True):
-            toggle_col, title_col, task_add_col = st.columns([1, 8, 1.5])
+            toggle_col, title_col, task_add_col = st.columns([1, 8, 1.5], vertical_alignment="center" )
 
             with toggle_col:
                 toggle_icon = "▾" if st.session_state[expanded_key] else "▸"
@@ -234,7 +248,7 @@ with col_left:
 
             with title_col:
                 st.markdown(
-                    f"<div class='task-box-title'>{task['color']} [{task['priority']}] {task['title']}</div>",
+                    f"<div class='task-box-title'>{task['color']} [{task['priority']}] {task['title']}</div>" ,
                     unsafe_allow_html=True,
                 )
 

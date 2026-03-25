@@ -3,5 +3,6 @@ numpy
 scikit-fuzzy
 deap
 streamlit
+plotly.express
 scipy
 networkx
