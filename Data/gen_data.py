@@ -39,29 +39,56 @@ def get_prereq_names(course_id):
 
 # 3. Áp dụng vào DataFrame
 df['Prerequisite_Names'] = df['ID'].apply(get_prereq_names)
-df.to_csv('CS.csv', index=False)
-fake_rows = []
+df.to_csv('CS1.csv', index=False)
+import pandas as pd
+import numpy as np
+import random
+from datetime import datetime, timedelta
 
-for _ in range(500):
-    # Chọn ngẫu nhiên một môn học từ danh sách gốc để lấy ID và Name
-    idx = random.randint(0, len(df) - 1)
-    base_row = df.iloc[idx]
+def generate_fake_dataset(source_df, total_rows=500):
+    # 1. Chuyển đổi prerequisites sang tuple để có thể drop_duplicates nếu cần
+    # (Nếu dữ liệu của ông đã sạch rồi thì có thể bỏ qua bước này)
+    temp_df = source_df.copy()
     
-    # Tạo dữ liệu fake cho các cột mới
-    row = {
-        'task_id': base_row['ID'],
-        'task_name': f"{base_row['Subject']} - {fake.catch_phrase()}", # Thêm hậu tố cho đa dạng
-        'estimated_duration_minutes': random.randint(30, 180), # Từ 30p đến 3 tiếng
-        'deadline': fake.date_time_between(start_date='now', end_date='+30d'), # Deadline trong vòng 30 ngày tới
-        'priority_level': random.choice(['Low', 'Medium', 'High']),
-        'cognitive_load': round(random.uniform(1.0, 10.0), 1), # Điểm từ 1.0 đến 10.0
-        'prerequisites': base_row['Prerequisite_Names']
-    }
-    fake_rows.append(row)
+    # 2. Chuyển DataFrame thành một "List of Lists" để random.choice hoạt động chuẩn xác
+    # Chỉ lấy 3 cột quan trọng: id, name, prerequisites
+    unique_tasks = temp_df[['ID', 'Subject', 'Prerequisite_Names']].values.tolist()
+    
+    new_data = []
+    
+    for i in range(total_rows):
+        # random.choice giờ sẽ chọn một List [id, name, pre] từ unique_tasks
+        base_task = random.choice(unique_tasks)
+        base_id, base_name, base_pre = base_task
+        
+        # Tạo ID mới để tránh trùng Primary Key
+        new_id = f"{base_id}_{i+1}"
+        new_name = f"{base_name} (S{i+1})"
+        
+        # Các thông số ngẫu nhiên khác
+        duration = random.randint(30, 240)
+        # Tạo deadline rải rác trong tương lai
+        deadline = datetime(2026, 4, 1) + timedelta(days=random.randint(0, 30), hours=random.randint(0, 23))
+        priority = random.choice(['Low', 'Medium', 'High'])
+        cog_load = random.randint(1, 10)
+        
+        new_data.append({
+            'task_id': new_id,
+            'task_name': new_name,
+            'estimated_duration_minutes': duration,
+            'deadline': deadline.strftime('%Y-%m-%d %H:%M'),
+            'priority_level': priority,
+            'cognitive_load': cog_load,
+            'prerequisites': base_pre  # Giữ nguyên list gốc từ data của ông
+        })
+    
+    return pd.DataFrame(new_data)
 
-# Tạo DataFrame cuối cùng
-df_fake = pd.DataFrame(fake_rows)
+# Chạy lệnh này
+df_500 = generate_fake_dataset(df, 500)
 
-# --- Bước 3: Kiểm tra kết quả ---
-print(df_fake.head(10))
-df_fake.to_csv('df_fake', index=False)
+# Lưu lại kiểm tra
+# df_500.to_csv("gen_data_500.csv", index=False)
+print("Đã tạo xong 500 dòng!")
+
+df_500.to_csv('df_500',index=False)

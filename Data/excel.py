@@ -1,9 +1,7 @@
-import pandas as pd
-
-# 1. Đọc file với dấu phân cách là ';'
-df = pd.read_csv('CS.csv', sep=';')
-
-# 2. Ghi lại ra file mới với dấu phân cách mặc định là ','
-df.to_csv('output_fixed.csv', index=False, encoding='utf-8')
-
-print("Đã đổi dấu ';' sang ',' thành công!")
+ task_id (Unique identifier)
+task_name (e.g., "Computer Architecture Lab 2", "Philosophy Reading")
+estimated_duration_minutes (Integer)
+deadline (Datetime)
+priority_level (Categorical: Low, Medium, High)
+cognitive_load (Numerical score representing how difficult the task is, to prevent scheduling three heavy tasks in a row).
+prerequisites (Array of other task_ids that must be completed first).
