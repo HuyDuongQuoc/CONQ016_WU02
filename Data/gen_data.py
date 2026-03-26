@@ -1,5 +1,6 @@
-import pandas as pd
 from faker import Faker
+import pandas as pd
+import numpy as np
 import random
 from datetime import datetime, timedelta
 
@@ -7,7 +8,7 @@ fake = Faker()
 # 1. Đọc file với dấu phẩy
 # 2. names=['ID', 'Subject', 'Credits'] để đặt tên cho các cột
 # 3. header=None để báo cho Pandas biết dòng đầu tiên là dữ liệu, không phải tiêu đề
-df = pd.read_csv('CS.csv', sep=',', names=['ID', 'Subject', 'Credits'], header=None)
+df = pd.read_csv('Data/CS.csv', sep=',', names=['ID', 'Subject', 'Credits'], header=None)
 
 print("DataFrame của bạn:")
 print(df)
@@ -39,56 +40,100 @@ def get_prereq_names(course_id):
 
 # 3. Áp dụng vào DataFrame
 df['Prerequisite_Names'] = df['ID'].apply(get_prereq_names)
-df.to_csv('CS1.csv', index=False)
-import pandas as pd
-import numpy as np
-import random
-from datetime import datetime, timedelta
+df.to_csv('Data/CS1.csv', index=False)
 
-def generate_fake_dataset(source_df, total_rows=500):
-    # 1. Chuyển đổi prerequisites sang tuple để có thể drop_duplicates nếu cần
-    # (Nếu dữ liệu của ông đã sạch rồi thì có thể bỏ qua bước này)
-    temp_df = source_df.copy()
-    
-    # 2. Chuyển DataFrame thành một "List of Lists" để random.choice hoạt động chuẩn xác
-    # Chỉ lấy 3 cột quan trọng: id, name, prerequisites
-    unique_tasks = temp_df[['ID', 'Subject', 'Prerequisite_Names']].values.tolist()
-    
+def generate_fake_dataset(source_df, target_rows=500):
     new_data = []
+    # DANH SÁCH MÔN CÓ 2 BTL (Ông thêm ID môn vào đây)
+    subjects_with_2_btl = ['CO2001', 'CO3005', 'LA1007', 'CO1027'] 
     
-    for i in range(total_rows):
-        # random.choice giờ sẽ chọn một List [id, name, pre] từ unique_tasks
-        base_task = random.choice(unique_tasks)
-        base_id, base_name, base_pre = base_task
-        
-        # Tạo ID mới để tránh trùng Primary Key
-        new_id = f"{base_id}_{i+1}"
-        new_name = f"{base_name} (S{i+1})"
-        
-        # Các thông số ngẫu nhiên khác
-        duration = random.randint(30, 240)
-        # Tạo deadline rải rác trong tương lai
-        deadline = datetime(2026, 4, 1) + timedelta(days=random.randint(0, 30), hours=random.randint(0, 23))
-        priority = random.choice(['Low', 'Medium', 'High'])
-        cog_load = random.randint(1, 10)
-        
-        new_data.append({
-            'task_id': new_id,
-            'task_name': new_name,
-            'estimated_duration_minutes': duration,
-            'deadline': deadline.strftime('%Y-%m-%d %H:%M'),
-            'priority_level': priority,
-            'cognitive_load': cog_load,
-            'prerequisites': base_pre  # Giữ nguyên list gốc từ data của ông
-        })
+    # Biến đếm để tạo hậu tố (suffix) tránh trùng ID khi lặp lại môn học
+    iteration = 1
     
-    return pd.DataFrame(new_data)
+    while len(new_data) < target_rows:
+        # Trộn ngẫu nhiên danh sách môn để data nhìn "tự nhiên" hơn
+        shuffled_df = source_df.sample(frac=1).reset_index(drop=True)
+        
+        for _, row in shuffled_df.iterrows():
+            if len(new_data) >= target_rows:
+                break
+                
+            sub_id = row['ID']
+            sub_name = row['Subject']
+            # Hậu tố để phân biệt các lần gen (ví dụ: CO2001_v1, CO2001_v2)
+            suffix = f"v{iteration}"
+            
+            # --- 1. TẠO 3 QUIZ (TUẦN TỰ) ---
+            quiz_ids = []
+            for i in range(1, 4):
+                q_id = f"{sub_id}_Quiz{i}_{suffix}"
+                quiz_ids.append(q_id)
+                new_data.append({
+                    'task_id': q_id,
+                    'task_name': f"{sub_name} - Quiz {i} ({suffix})",
+                    'estimated_duration_minutes': random.randint(30, 45),
+                    'deadline': (datetime(2026, 4, 1) + timedelta(days=i*7 + iteration*2)).strftime('%Y-%m-%d %H:%M'),
+                    'priority_level': 'Medium',
+                    'cognitive_load': random.randint(2, 4),
+                    'prerequisites': [quiz_ids[i-2]] if i > 1 else [] # Quiz 2 đợi Quiz 1
+                })
 
-# Chạy lệnh này
+            # --- 2. TẠO BÀI TẬP LỚN (BTL) ---
+            btl1_id = f"{sub_id}_BTL1_{suffix}"
+            new_data.append({
+                'task_id': btl1_id,
+                'task_name': f"{sub_name} - BTL 1 ({suffix})",
+                'estimated_duration_minutes': random.randint(180, 360),
+                'deadline': (datetime(2026, 5, 1) + timedelta(days=iteration)).strftime('%Y-%m-%d %H:%M'),
+                'priority_level': 'High',
+                'cognitive_load': random.randint(6, 8),
+                'prerequisites': [quiz_ids[0]] # Xong Quiz 1 mới làm BTL 1
+            })
+            
+            last_btl_id = btl1_id
+            # Kiểm tra nếu môn này có 2 BTL
+            if sub_id in subjects_with_2_btl:
+                btl2_id = f"{sub_id}_BTL2_{suffix}"
+                new_data.append({
+                    'task_id': btl2_id,
+                    'task_name': f"{sub_name} - BTL 2 ({suffix})",
+                    'estimated_duration_minutes': random.randint(240, 480),
+                    'deadline': (datetime(2026, 5, 20) + timedelta(days=iteration)).strftime('%Y-%m-%d %H:%M'),
+                    'priority_level': 'High',
+                    'cognitive_load': random.randint(8, 10),
+                    'prerequisites': [btl1_id] # BTL 2 đợi BTL 1
+                })
+                last_btl_id = btl2_id
+
+            # --- 3. BÀI GIỮA KỲ (GK) ---
+            gk_id = f"{sub_id}_GK_{suffix}"
+            new_data.append({
+                'task_id': gk_id,
+                'task_name': f"{sub_name} - Thi GK ({suffix})",
+                'estimated_duration_minutes': 90,
+                'deadline': (datetime(2026, 5, 10) + timedelta(days=iteration)).strftime('%Y-%m-%d %H:%M'),
+                'priority_level': 'High',
+                'cognitive_load': 7,
+                'prerequisites': [quiz_ids[1]] # Xong Quiz 2 mới thi GK
+            })
+
+            # --- 4. BÀI CUỐI KỲ (CK) ---
+            new_data.append({
+                'task_id': f"{sub_id}_CK_{suffix}",
+                'task_name': f"{sub_name} - Thi CK ({suffix})",
+                'estimated_duration_minutes': 120,
+                'deadline': (datetime(2026, 6, 15) + timedelta(days=iteration)).strftime('%Y-%m-%d %H:%M'),
+                'priority_level': 'High',
+                'cognitive_load': 9,
+                'prerequisites': [gk_id, last_btl_id, quiz_ids[2]] # Phải xong hết mới thi CK
+            })
+        
+        iteration += 1 # Tăng hậu tố nếu phải lặp lại danh sách môn lần nữa
+        
+    # Cắt bớt nếu lỡ dư dòng do vòng lặp for
+    return pd.DataFrame(new_data[:target_rows])
+
+# Thực thi
 df_500 = generate_fake_dataset(df, 500)
-
-# Lưu lại kiểm tra
-# df_500.to_csv("gen_data_500.csv", index=False)
-print("Đã tạo xong 500 dòng!")
-
-df_500.to_csv('df_500',index=False)
+print(f"Tổng số dòng đã tạo: {len(df_500)}")
+df_500.to_csv('Data/df_500_tasks.csv', index=False)
