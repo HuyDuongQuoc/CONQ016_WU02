@@ -69,10 +69,10 @@ Sau đó, lên trang web GitHub, bấm nút **"Compare & pull request"** và bá
 
 ```Bash
 pip install -r requirements.txt
-Bước 3: Khởi chạy ứng dụng Streamlit
-Từ thư mục gốc của dự án, hãy chạy lệnh sau để khởi động web server:
 ```
 **Bước 3: Khởi chạy ứng dụng Streamlit**
+
+Từ thư mục gốc của dự án, hãy chạy lệnh sau để khởi động web server:
 ```Bash
 streamlit run App/webdemo.py
 ```
