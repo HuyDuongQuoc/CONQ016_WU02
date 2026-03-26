@@ -53,3 +53,29 @@ Sau đó, lên trang web GitHub, bấm nút **"Compare & pull request"** và bá
 1. **Luôn nhớ kích hoạt `venv`** trước khi chạy code (`venv\Scripts\activate`).
 2. **Kéo (Pull) code trước khi Đẩy (Push)** để tránh xung đột (Conflict).
 3. Nếu cần cài thêm thư viện mới, hãy báo cho Trưởng nhóm để cập nhật vào file `requirements.txt`.
+
+---
+## 💻 Phần 4: Hướng dẫn Demo 
+Để chạy thử giao diện Dashboard của dự án trên máy cá nhân, các bạn làm theo các bước sau:
+
+**Bước 1: Kích hoạt môi trường ảo**
+Đảm bảo bạn đang ở trong thư mục dự án (CONQ016_WU02) và đã kích hoạt môi trường ảo.
+
+* Windows: `venv\Scripts\activate`
+
+* Mac/Linux: `source venv/bin/activate`
+
+**Bước 2: Cài đặt thư viện (Nếu chưa làm ở Phần 1)**
+
+```Bash
+pip install -r requirements.txt
+Bước 3: Khởi chạy ứng dụng Streamlit
+Từ thư mục gốc của dự án, hãy chạy lệnh sau để khởi động web server:
+```
+**Bước 3: Khởi chạy ứng dụng Streamlit**
+```Bash
+streamlit run App/webdemo.py
+```
+
+Trình duyệt sẽ tự động mở trang Dashboard tại địa chỉ http://localhost:8501.
+Nếu không tự mở, bạn có thể copy link đó dán vào trình duyệt.
