@@ -146,23 +146,6 @@ with col_right:
     """
     st.markdown(calendar_html, unsafe_allow_html=True)
 
-    # --- BIỂU ĐỒ MONTHLY PROGRESS ---
-    # st.markdown('<div class="section-header">MONTHLY PROGRESS: COMPLETED TASKS</div>', unsafe_allow_html=True)
-
-    # days_in_month = calendar.monthrange(current_year, selected_month)[1]
-    # daily_counts = month_df.groupby(month_df["end"].dt.day).size().reindex(range(1, days_in_month + 1), fill_value=0)
-
-    # chart_data = pd.DataFrame({"Day": list(range(1, days_in_month + 1)), "Completed Tasks": daily_counts.values})
-
-    # fig = px.bar(chart_data, x='Day', y='Completed Tasks',
-    #              color_discrete_sequence=["#99d4fb"],
-    #              labels={'Completed Tasks': 'Completed Tasks', 'Day': 'Day'})
-    # fig.update_layout(
-    #     showlegend=False,
-    #     height=400,
-    #     margin=dict(b=100)
-    # )
-    # st.plotly_chart(fig, use_container_width=True)
 
 # ================= (LEFT COLUMN) =================
 with col_left:
@@ -178,11 +161,20 @@ with col_left:
         if checkbox_key not in st.session_state:
             st.session_state[checkbox_key] = False
 
-        # end_day = row["end"].strftime("%d/%m/%Y")
+        # Time remaining to deadline in hours
+        hours_left = (row["end"] - datetime.now()).total_seconds() / 3600
+
+        if hours_left < 24:
+            deadline_color = "🔴"
+        elif hours_left <= 48:
+            deadline_color = "🟠"
+        else:
+            deadline_color = "🟢"
+
         project_cards.append(
             {
                 "priority": project_priority[project_name],
-                "color": "🟢" if project_priority[project_name] == "P1" else "🟠" if project_priority[project_name] == "P2" else "🟡",
+                "color": deadline_color,
                 "title": f"{project_name}",
                 "checkbox_key": checkbox_key,
                 "is_finished": st.session_state[checkbox_key],
