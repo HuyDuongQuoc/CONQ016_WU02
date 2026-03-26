@@ -67,7 +67,8 @@ def repair_genes(tasks: list[Task], genes: list[int], config: GAConfig) -> list[
 
         candidate = max(preferred, earliest_allowed)
         placed = False
-        for shift in range(0, slots_per_day * 30):
+        days_needed = ceil(len(tasks) / max(1, config.max_tasks_per_day)) + 10
+        for shift in range(0, slots_per_day * days_needed):
             slot = candidate + shift
             day = slot // slots_per_day
             offset = slot % slots_per_day

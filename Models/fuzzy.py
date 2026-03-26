@@ -145,20 +145,20 @@ def evaluate_and_sort_tasks(task_list, fuzzy_sim):
     
     return sorted_tasks
 
-# --- CHẠY THỬ KẾT QUẢ ---
-if __name__ == "__main__":
-    # Khởi tạo động cơ (Chỉ chạy 1 lần)
-    engine = build_fuzzy_engine()
+# # --- CHẠY THỬ KẾT QUẢ ---
+# if __name__ == "__main__":
+#     # Khởi tạo động cơ (Chỉ chạy 1 lần)
+#     engine = build_fuzzy_engine()
     
-    # Mock data từ TV1 (Khoa)
-    mock_tasks = [
-        {"task_id": "T1", "task_name": "Code MIPS Lab", "hours_remaining": 12, "priority_level": 3, "cognitive_load": 9, "duration_mins": 180},
-        {"task_id": "T2", "task_name": "Đọc Triết học", "hours_remaining": 12, "priority_level": 3, "cognitive_load": 5, "duration_mins": 60},
-        {"task_id": "T3", "task_name": "Dọn dẹp file", "hours_remaining": 100, "priority_level": 1, "cognitive_load": 2, "duration_mins": 30}
-    ]
+#     # Mock data từ TV1 (Khoa)
+#     mock_tasks = [
+#         {"task_id": "T1", "task_name": "Code MIPS Lab", "hours_remaining": 12, "priority_level": 3, "cognitive_load": 9, "duration_mins": 180},
+#         {"task_id": "T2", "task_name": "Đọc Triết học", "hours_remaining": 12, "priority_level": 3, "cognitive_load": 5, "duration_mins": 60},
+#         {"task_id": "T3", "task_name": "Dọn dẹp file", "hours_remaining": 100, "priority_level": 1, "cognitive_load": 2, "duration_mins": 30}
+#     ]
     
-    print("Đang xử lý phân luồng...\n")
-    result = evaluate_and_sort_tasks(mock_tasks, engine)
+#     print("Đang xử lý phân luồng...\n")
+#     result = evaluate_and_sort_tasks(mock_tasks, engine)
     
-    for idx, t in enumerate(result, 1):
-        print(f"Top {idx}: [{t['urgency_score']}/10] {t['task_name']} | Cần {t['duration_mins']} phút")
+#     for idx, t in enumerate(result, 1):
+#         print(f"Top {idx}: [{t['urgency_score']}/10] {t['task_name']} | Cần {t['duration_mins']} phút")

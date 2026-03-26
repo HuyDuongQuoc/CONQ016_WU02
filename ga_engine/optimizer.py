@@ -15,7 +15,7 @@ from .scheduler import gene_to_schedule, repair_genes
 def _make_random_chromosome(tasks: list[Task], config: GAConfig) -> Chromosome:
     random_genes = []
     slots_per_day = ((config.day_end.hour * 60 + config.day_end.minute) - (config.day_start.hour * 60 + config.day_start.minute)) // config.slot_minutes
-    horizon_days = max(7, min(30, ceil(len(tasks) / max(1, config.max_tasks_per_day)) + 3))
+    horizon_days = max(7, ceil(len(tasks) / max(1, config.max_tasks_per_day)) + 10)
     for _ in tasks:
         random_genes.append(random.randint(0, slots_per_day * horizon_days - 1))
     return Chromosome(genes=repair_genes(tasks, random_genes, config))
