@@ -5,7 +5,6 @@ import calendar
 import sys
 from datetime import datetime
 from pathlib import Path
-import plotly.express as px
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -18,7 +17,7 @@ from Data.data_preprocessing import CSVTaskProcessor
 # 1. CẤU HÌNH TRANG VÀ CSS TÙY CHỈNH
 st.set_page_config(page_title="Smart Timetable & Task Optimizer", layout="wide")
 
-# CSS để tùy chỉnh màu sắc và giao diện (Đã cập nhật theo yêu cầu Minimalist)
+# CSS để tùy chỉnh màu sắc và giao diện (Minimalist)
 st.markdown("""
     <style>
     /* Đổi màu Header sang Xám Đen nhám */
@@ -71,6 +70,14 @@ st.markdown("""
         font-size: 28px !important;
         color: #1F2937;
     }
+    
+    /* Ẩn dấu mũi tên mặc định của thẻ details trên một số trình duyệt */
+    details > summary {
+        list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+        display: none;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -96,9 +103,9 @@ def preprocess_and_optimize_tasks(uploaded_csv_bytes: bytes) -> tuple[pd.DataFra
 def get_task_urgency_color(end_date):
     """Tính toán màu sắc dựa trên thời gian còn lại đến deadline"""
     hours_left = (end_date - datetime.now()).total_seconds() / 3600
-    if hours_left < 72:      # Gấp (< 3 ngày)
+    if hours_left < 48:      # Gấp (< 2 ngày)
         return "#FCA5A5"     # Đỏ nhạt pastel
-    elif hours_left <= 168:  # Vừa (< 7 ngày)
+    elif hours_left <= 120:  # Vừa (< 5 ngày)
         return "#FDE047"     # Vàng nhạt pastel
     else:                    # Chill
         return "#86EFAC"     # Xanh lá lợt pastel
@@ -126,10 +133,15 @@ except Exception as exc:
     st.error(f"Cannot process uploaded file: {exc}")
     st.stop()
 
+# Đảm bảo xử lý đúng datetime
 gantt_df["end"] = pd.to_datetime(gantt_df["end"], errors="coerce")
+if "start" in gantt_df.columns:
+    gantt_df["start"] = pd.to_datetime(gantt_df["start"], errors="coerce")
+
 gantt_df = gantt_df.dropna(subset=["end", "task_name"]).copy()
 
-priority_rank_df = gantt_df.sort_values(by=["end", "task_name"]).drop_duplicates(subset=["task_name"])
+# GIỮ NGUYÊN THỨ TỰ TỪ GA ENGINE, CHỈ BỎ TRÙNG LẶP ĐỂ ĐÁNH MÃ P1, P2...
+priority_rank_df = gantt_df.drop_duplicates(subset=["task_name"], keep="first")
 project_names = priority_rank_df["task_name"].tolist()
 project_priority = {name: f"P{idx + 1}" for idx, name in enumerate(project_names)}
 
@@ -168,18 +180,31 @@ with col_right:
         label_visibility="collapsed"
     )
     selected_month = month_names.index(selected_month_name) + 1
-
+    
     event_map = {}
     month_df = gantt_df[gantt_df["end"].dt.month == selected_month]
     for _, row in month_df.iterrows():
         end_day = int(row["end"].day)
         title = f"{row['task_name']}"
-        # Đồng bộ lấy màu từ hàm chung
         color = get_task_urgency_color(row["end"]) 
-        event_map.setdefault(end_day, []).append((title, color))
+        
+        # LẤY THÔNG TIN CHI TIẾT
+        priority = project_priority.get(title, "P3")
+        start_time_str = row["start"].strftime("%H:%M %d/%m") if "start" in gantt_df.columns and pd.notnull(row["start"]) else "N/A"
+        end_time_str = row["end"].strftime("%H:%M %d/%m")
+        
+        # Format nội dung hiển thị khi click
+        details_text = (
+            f"<div style='margin-bottom:2px;'><b>Tên:</b> {title}</div>"
+            f"<div style='margin-bottom:2px;'><b>Mức độ:</b> {priority}</div>"
+            f"<div style='margin-bottom:2px;'><b>Bắt đầu:</b> {start_time_str}</div>"
+            f"<div><b>Deadline:</b> {end_time_str}</div>"
+        )
+        
+        event_map.setdefault(end_day, []).append((title, color, details_text))
 
     week_rows = calendar.Calendar(firstweekday=6).monthdatescalendar(current_year, selected_month)
-    dynamic_height = len(week_rows) * 90 + 130 # Tính chiều cao động cho cột trái
+    dynamic_height = len(week_rows) * 90 + 130 
 
     calendar_rows_html = []
     for week in week_rows:
@@ -190,22 +215,26 @@ with col_right:
             day_events = event_map.get(day_obj.day, []) if is_current_month else []
 
             badges_html = ""
-            for title, color in day_events:
-                # Chữ đổi sang Xám đen (#1F2937) để nổi bật trên nền Pastel
+            for title, color, details_text in day_events:
+                # DÙNG THẺ <details> ĐỂ TẠO HIỆU ỨNG CLICK XỔ XUỐNG CHI TIẾT
                 badges_html += (
-                    f"<div style='margin-top:4px; background-color:{color}; color:#1F2937; "
-                    f"padding:3px 6px; border-radius:4px; font-size:11px; font-weight:600; "
-                    f"white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{title}</div>"
+                    f"<details style='margin-top:4px; background-color:{color}; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);'>"
+                    f"  <summary style='padding:4px 6px; color:#1F2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; outline:none;'>"
+                    f"    {title}"
+                    f"  </summary>"
+                    f"  <div style='padding: 6px; font-size: 11px; font-weight: 400; color: #111827; background-color: rgba(255,255,255,0.75); border-top: 1px solid rgba(0,0,0,0.05); white-space: normal; line-height: 1.3;'>"
+                    f"    {details_text}"
+                    f"  </div>"
+                    f"</details>"
                 )
 
-            # Đổi màu viền td sang xám nhạt #E5E7EB
             cells.append(
                 f"<td style='border:1px solid #E5E7EB; height:90px; vertical-align:top; padding:8px; "
                 f"background-color:#ffffff; transition: background-color 0.2s;'>"
                 f"<span style='color:{day_number_color}; font-weight:500;'>{day_obj.day}</span>{badges_html}</td>"
             )
         calendar_rows_html.append(f"<tr>{''.join(cells)}</tr>")
-
+        
     # Bọc Table trong một div để bo tròn góc tổng thể
     calendar_html = f"""
     <div style="border-radius: 10px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
@@ -232,14 +261,14 @@ with col_left:
     st.markdown('<div class="section-header">🎯 PRIORITIZED TASKS</div>', unsafe_allow_html=True)
 
     today = datetime.now().date()
+    
     upcoming_priority_rank_df = priority_rank_df[priority_rank_df["end"].dt.date >= today]
 
     project_cards = []
+    # Dùng enumerate để lấy index làm sort_order gốc
     for index, (_, row) in enumerate(upcoming_priority_rank_df.iterrows()):
         project_name = str(row["task_name"])
         checkbox_key = f"finished::{project_name}"
-        
-        # Đồng bộ màu sắc với Calendar
         color_hex = get_task_urgency_color(row["end"])
 
         project_cards.append(
@@ -249,10 +278,11 @@ with col_left:
                 "title": f"{project_name}",
                 "checkbox_key": checkbox_key,
                 "is_finished": st.session_state[checkbox_key],
-                "sort_order": index,
+                "sort_order": index # Lưu lại vị trí gốc
             }
         )
 
+    # SẮP XẾP LẠI: Ưu tiên 1 là trạng thái hoàn thành, Ưu tiên 2 là vị trí gốc
     project_cards = sorted(project_cards, key=lambda task: (task["is_finished"], task["sort_order"]))
 
     if not project_cards:
@@ -266,9 +296,12 @@ with col_left:
                     with checkbox_col:
                         st.checkbox("Done", key=task["checkbox_key"], label_visibility="collapsed")
                     with title_col:
-                        # Dùng vòng tròn màu (circle) đồng bộ 100% với màu bên Calendar thay vì Emoji
+                        # Thêm hiệu ứng gạch ngang chữ nếu task đã hoàn thành (tùy chọn UI cho đẹp)
+                        text_decoration = "line-through" if task["is_finished"] else "none"
+                        opacity = "0.5" if task["is_finished"] else "1"
+                        
                         st.markdown(
-                            f"<div class='task-box-title'>"
+                            f"<div class='task-box-title' style='text-decoration: {text_decoration}; opacity: {opacity};'>"
                             f"<span style='display:inline-block; width:14px; height:14px; border-radius:50%; "
                             f"background-color:{task['color']}; margin-right:8px; border: 1px solid rgba(0,0,0,0.1);'></span>"
                             f"<b>[{task['priority']}]</b>&nbsp; {task['title']}</div>",
