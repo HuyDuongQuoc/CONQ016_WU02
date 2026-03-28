@@ -1,10 +1,9 @@
-streamlit
+streamlit>=1.35.0
 pandas
 numpy
 altair<5
 scikit-fuzzy
 deap
-streamlit
 plotly.express
 scipy
 networkx
