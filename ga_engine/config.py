@@ -23,4 +23,7 @@ class GAConfig:
     urgency_reward_weight: float = 10.0
     priority_reward_weight: float = 7.0
     focus_bonus_weight: float = 2.0
+    is_standard_ga: bool = False
     now: datetime | None = None
+    
+    
