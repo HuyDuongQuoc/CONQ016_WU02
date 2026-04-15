@@ -4,7 +4,7 @@ numpy
 altair<5
 scikit-fuzzy
 deap
-plotly.express
+plotly
 scipy
 networkx
 faker

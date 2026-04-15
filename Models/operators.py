@@ -22,9 +22,13 @@ def crossover(parent_a: Chromosome, parent_b: Chromosome, tasks: list[Task], con
     right = random.randint(left + 1, size - 1)
     child1_genes = parent_a.genes[:left] + parent_b.genes[left:right] + parent_a.genes[right:]
     child2_genes = parent_b.genes[:left] + parent_a.genes[left:right] + parent_b.genes[right:]
-
-    child1 = Chromosome(genes=repair_genes(tasks, child1_genes, config))
-    child2 = Chromosome(genes=repair_genes(tasks, child2_genes, config))
+    if config.is_standard_ga: 
+        child1 = Chromosome(genes=child1_genes)
+        child2 = Chromosome(genes=child2_genes)
+    else:
+        child1 = Chromosome(genes=repair_genes(tasks, child1_genes, config))
+        child2 = Chromosome(genes=repair_genes(tasks, child2_genes, config))
+    
     return child1, child2
 
 
@@ -41,4 +45,8 @@ def mutate(chromosome: Chromosome, tasks: list[Task], config: GAConfig) -> Chrom
         a, b = random.sample(range(len(genes)), 2)
         genes[a], genes[b] = genes[b], genes[a]
 
-    return Chromosome(genes=repair_genes(tasks, genes, config))
+    if config.is_standard_ga:
+        return Chromosome(genes=genes) 
+    else:
+        return Chromosome(genes=repair_genes(tasks, genes, config))
+        

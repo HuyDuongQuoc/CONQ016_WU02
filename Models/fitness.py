@@ -25,9 +25,11 @@ def evaluate(tasks: list[Task], chromosome: Chromosome, config: GAConfig) -> flo
         penalties += lateness_hours * config.lateness_penalty_per_hour
 
         priority_score = task_by_id[item.task_id].metadata.get("priority_score", 6.0)
-        rewards += config.urgency_reward_weight * (item.urgency_score / 10.0)
-        rewards += config.priority_reward_weight * (priority_score / 10.0)
-        rewards += config.completion_reward_weight
+        if not config.is_standard_ga:
+            rewards += config.urgency_reward_weight * (item.urgency_score / 10.0)
+        else:
+            rewards += config.priority_reward_weight * (priority_score / 10.0)
+            rewards += config.completion_reward_weight
 
     for task in tasks:
         current = by_id[task.task_id]
@@ -42,8 +44,9 @@ def evaluate(tasks: list[Task], chromosome: Chromosome, config: GAConfig) -> flo
             a, b = items[i], items[i + 1]
             if a.end > b.start:
                 penalties += config.overlap_penalty
-            if a.cognitive_load >= 7 and b.cognitive_load >= 7:
-                penalties += config.cognitive_overload_penalty
+            if not config.is_standard_ga:
+                if a.cognitive_load >= 7 and b.cognitive_load >= 7:
+                    penalties += config.cognitive_overload_penalty
             if a.priority_level != b.priority_level:
                 penalties += config.context_switch_penalty
             else:
