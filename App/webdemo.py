@@ -10,8 +10,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from ga_engine.api import optimize_tasks
-from ga_engine.config import GAConfig
+from Models.api import optimize_tasks
+from Models.config import GAConfig
 from Data.data_preprocessing import CSVTaskProcessor
 
 # 1. CẤU HÌNH TRANG VÀ CSS TÙY CHỈNH

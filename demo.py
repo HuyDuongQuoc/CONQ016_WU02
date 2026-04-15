@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from ga_engine import optimize_tasks
-from ga_engine.config import GAConfig
+from Models import optimize_tasks
+from Models.config import GAConfig
 from Data.data_preprocessing import CSVTaskProcessor
 now = datetime.now()
 
