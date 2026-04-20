@@ -14,11 +14,16 @@ from .scheduler import gene_to_schedule, repair_genes
 
 def _make_random_chromosome(tasks: list[Task], config: GAConfig) -> Chromosome:
     random_genes = []
-    slots_per_day = ((config.day_end.hour * 60 + config.day_end.minute) - (config.day_start.hour * 60 + config.day_start.minute)) // config.slot_minutes
+    slots_per_day = (
+        ((config.day_end.hour * 60 + config.day_end.minute) - (config.day_start.hour * 60 + config.day_start.minute))
+        // config.slot_minutes
+    )
     horizon_days = max(7, ceil(len(tasks) / max(1, config.max_tasks_per_day)) + 10)
     for _ in tasks:
         random_genes.append(random.randint(0, slots_per_day * horizon_days - 1))
-    return Chromosome(genes=repair_genes(tasks, random_genes, config))
+
+    genes = repair_genes(tasks, random_genes, config) if config.use_repair else random_genes
+    return Chromosome(genes=genes)
 
 
 def run_ga(tasks: list[Task], config: GAConfig | None = None) -> dict:
@@ -70,5 +75,6 @@ def run_ga(tasks: list[Task], config: GAConfig | None = None) -> dict:
             "population_size": config.population_size,
             "generations": config.generations,
             "mutation_rate": config.mutation_rate,
+            "use_repair": config.use_repair,
         },
     }
